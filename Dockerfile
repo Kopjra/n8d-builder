@@ -20,8 +20,11 @@ RUN apt-get install -y docker-ce
 # Installing AWS CLI
 RUN apt-get install -y awscli
 
-# Installing
+# Installing kustomize
 RUN cd ~ && wget https://github.com/kubernetes-sigs/kustomize/releases/download/v2.0.3/kustomize_2.0.3_linux_amd64 && mv kustomize_2.0.3_linux_amd64 /usr/bin/kustomize && chmod aug+x /usr/bin/kustomize
+
+# Installing sops
+RUN cd ~ && wget https://github.com/mozilla/sops/releases/download/3.2.0/sops-3.2.0.linux && mv sops-3.2.0.linux /usr/bin/sops && chmod aug+x /usr/bin/sops
 
 CMD []
 
