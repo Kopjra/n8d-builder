@@ -1,0 +1,132 @@
+#!/bin/bash
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    --use_gcp)
+    USE_GCP="1"
+    shift # past argument
+    ;;
+    --use_aws)
+    USE_AWS="1"
+    shift # past argument
+    ;;
+    --gcp_project)
+    GCP_PROJECT="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --docker_local_image_fullname)
+    LOCAL_IMAGE_FULLNAME="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --docker_registry)
+    DOCKER_REGISTRY="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --docker_repository)
+    DOCKER_REPOSITORY="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --docker_tag)
+    DOCKER_TAG="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --export_path)
+    EXPORT_PATH="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    *)    # unknown option
+    #POSITIONAL+=("$1") # save it in an array for later
+    #shift # past argument
+    echo "Unknown option"
+    return -3
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+echo "USE_GCP               = ${USE_GCP}"
+echo "USE_AWS               = ${USE_AWS}"
+echo "AWS_ACCESS_KEY_ID     = ${AWS_ACCESS_KEY_ID}"
+echo "AWS_SECRET_ACCESS_KEY = ${AWS_SECRET_ACCESS_KEY}"
+echo "AWS_DEFAULT_REGION    = ${AWS_DEFAULT_REGION}"
+echo "GOOGLE_AUTH           = ${GOOGLE_AUTH}"
+echo "GCP_PROJECT           = ${GCP_PROJECT}"
+echo "LOCAL_IMAGE_FULLNAME  = ${LOCAL_IMAGE_FULLNAME}"
+echo "DOCKER_REGISTRY       = ${DOCKER_REGISTRY}"
+echo "DOCKER_REPOSITORY     = ${DOCKER_REPOSITORY}"
+echo "DOCKER_TAG            = ${DOCKER_TAG}"
+echo "EXPORT_PATH           = ${EXPORT_PATH}"
+
+if [[ -z "${LOCAL_IMAGE_FULLNAME}" ]]; then
+  echo "LOCAL_IMAGE_FULLNAME is a mandatory argument"
+  return -1
+fi
+if [[ -z "${DOCKER_REGISTRY}" ]]; then
+  echo "DOCKER_REGISTRY is a mandatory argument"
+  return -1
+fi
+if [[ -z "${DOCKER_REPOSITORY}" ]]; then
+  echo "DOCKER_REPOSITORY is a mandatory argument"
+  return -1
+fi
+if [[ -z "${DOCKER_TAG}" ]]; then
+  echo "DOCKER_TAG is a mandatory argument"
+  return -1
+fi
+
+if [[ $USE_GCP == "1" ]]; then
+  if [[ -z "${GOOGLE_AUTH}" ]]; then
+    echo "GOOGLE_AUTH environmental variable must be set when using gcp"
+    return -2
+  fi
+  if [[ -z "${GCP_PROJECT}" ]]; then
+    echo "GCP_PROJECT argument must be set when using gcp"
+    return -2
+  fi
+
+  echo ${GOOGLE_AUTH} > ${HOME}/gcp-key.json
+  gcloud auth activate-service-account --key-file ${HOME}/gcp-key.json
+  gcloud --quiet config set project ${GCP_PROJECT}
+  docker tag ${LOCAL_IMAGE_FULLNAME} ${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG}
+  gcloud docker -- push ${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG}
+fi
+
+if [[ $USE_AWS == "1" ]]; then
+  if [[ -z "${AWS_ACCESS_KEY_ID}" ]]; then
+    echo "AWS_ACCESS_KEY_ID environmental variable must be set when using aws"
+    return -2
+  fi
+  if [[ -z "${AWS_SECRET_ACCESS_KEY}" ]]; then
+    echo "AWS_SECRET_ACCESS_KEY environmental variable must be set when using aws"
+    return -2
+  fi
+  if [[ -z "${AWS_DEFAULT_REGION}" ]]; then
+    echo "AWS_DEFAULT_REGION environmental variable must be set when using aws"
+    return -2
+  fi
+
+  DOCKER_LOGIN=`aws ecr get-login --no-include-email`
+  /bin/bash -c "$DOCKER_LOGIN"
+  docker tag ${LOCAL_IMAGE_FULLNAME} ${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG}
+  docker push ${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_IMAGE_TAG}
+fi
+
+if [[ -v "${EXPORT_PATH}" ]]; then
+  docker save -o $EXPORT_PATH $LOCAL_IMAGE_FULLNAME
+fi
+
+#echo "Number files in SEARCH PATH with EXTENSION:" $(ls -1 "${SEARCHPATH}"/*."${EXTENSION}" | wc -l)
+#if [[ -n $1 ]]; then
+#    echo "Last line of file specified as non-opt/last argument:"
+#    tail -1 "$1"
+#fi

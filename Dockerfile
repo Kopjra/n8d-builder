@@ -29,5 +29,8 @@ RUN cd ~ && wget https://github.com/kubernetes-sigs/kustomize/releases/download/
 # Installing sops
 RUN cd ~ && wget https://github.com/mozilla/sops/releases/download/3.2.0/sops-3.2.0.linux && mv sops-3.2.0.linux /usr/bin/sops && chmod aug+x /usr/bin/sops
 
-CMD []
+# Installing binaries
+COPY ./bin/docker_image_pusher /bin/docker_image_pusher
+COPY ./bin/kube_deployer /bin/kube_deployer
 
+CMD []
