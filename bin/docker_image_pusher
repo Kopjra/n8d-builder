@@ -122,7 +122,7 @@ if [[ $USE_AWS == "1" ]]; then
 fi
 
 if [[ -z "${EXPORT_PATH}" ]]; then
-  ;
+  echo ""
 else
   docker save -o $EXPORT_PATH $LOCAL_IMAGE_FULLNAME
 fi
