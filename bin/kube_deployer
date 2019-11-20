@@ -81,7 +81,7 @@ fi
 PRE_PWD=`pwd`
 cd $KUSTOMIZATION_PATH
 sops -d secret.yaml > secret_unencrypted.yaml
-kustomize edit set image ${DOCKER_REPOSITORY}=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}/${DOCKER_TAG}
+kustomize edit set image ${DOCKER_REPOSITORY}=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG}
 kustomize build . > kubernetes.yaml
 kubectl --server=$KUBERNETES_SERVER --insecure-skip-tls-verify --token $KUBERNETES_TOKEN apply -f kubernetes.yaml
 rm secret_unencrypted.yaml kubernetes.yaml
