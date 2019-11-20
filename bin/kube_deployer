@@ -39,7 +39,7 @@ case $key in
     *)    # unknown option
     #POSITIONAL+=("$1") # save it in an array for later
     #shift # past argument
-    echo "Unknown option"
+    echo "Unknown option(s) $1 $2"
     return -3
     ;;
 esac

@@ -47,7 +47,7 @@ case $key in
     *)    # unknown option
     #POSITIONAL+=("$1") # save it in an array for later
     #shift # past argument
-    echo "Unknown option"
+    echo "Unknown option(s) $1 $2"
     return -3
     ;;
 esac
@@ -121,7 +121,9 @@ if [[ $USE_AWS == "1" ]]; then
   docker push ${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_IMAGE_TAG}
 fi
 
-if [[ -v "${EXPORT_PATH}" ]]; then
+if [[ -z "${EXPORT_PATH}" ]]; then
+  ;
+else
   docker save -o $EXPORT_PATH $LOCAL_IMAGE_FULLNAME
 fi
 
