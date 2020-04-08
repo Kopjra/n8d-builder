@@ -83,7 +83,7 @@ if [[ -z "${GCP_PROJECT}" ]]; then
   return 2
 fi
 
-#echo ${GOOGLE_AUTH} > ${HOME}/gcp-key.json
-#gcloud auth activate-service-account --key-file ${HOME}/gcp-key.json
+echo ${GOOGLE_AUTH} > ${HOME}/gcp-key.json
+gcloud auth activate-service-account --key-file ${HOME}/gcp-key.json
 gcloud --quiet config set project ${GCP_PROJECT}
 sh -c "gcloud run deploy $NAME --image=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG} $PARAMS"

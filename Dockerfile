@@ -33,5 +33,6 @@ RUN cd ~ && wget https://github.com/mozilla/sops/releases/download/3.2.0/sops-3.
 COPY ./bin/docker_image_pusher /bin/docker_image_pusher
 COPY ./bin/kube_deployer /bin/kube_deployer
 COPY ./bin/docker_registry_login /bin/docker_registry_login
+COPY ./bin/gcp_run_deployer /bin/gcp_run_deployer
 
 CMD []
