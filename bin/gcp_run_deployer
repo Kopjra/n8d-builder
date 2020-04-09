@@ -40,7 +40,7 @@ case $key in
     #POSITIONAL+=("$1") # save it in an array for later
     #shift # past argument
     echo "Unknown option(s) $1 $2"
-    return -3
+    return 3
     ;;
 esac
 done
@@ -56,28 +56,28 @@ echo "NAME                  = ${NAME}"
 
 if [[ -z "${DOCKER_REGISTRY}" ]]; then
   echo "DOCKER_REGISTRY is a mandatory argument"
-  return -1
+  return 1
 fi
 if [[ -z "${DOCKER_REPOSITORY}" ]]; then
   echo "DOCKER_REPOSITORY is a mandatory argument"
-  return -1
+  return 1
 fi
 if [[ -z "${PARAMS}" ]]; then
   echo "PARAMS is a mandatory argument"
-  return -1
+  return 1
 fi
 if [[ -z "${NAME}" ]]; then
   echo "NAME is a mandatory argument"
-  return -1
+  return 1
 fi
 if [[ -z "${DOCKER_TAG}" ]]; then
   echo "DOCKER_TAG is a mandatory argument"
-  return -1
+  return 1
 fi
-if [[ -z "${GOOGLE_AUTH}" ]]; then
-  echo "GOOGLE_AUTH environmental variable must be set when using gcp"
-  return 2
-fi
+#if [[ -z "${GOOGLE_AUTH}" ]]; then
+#  echo "GOOGLE_AUTH environmental variable must be set when using gcp"
+#  return 2
+#fi
 if [[ -z "${GCP_PROJECT}" ]]; then
   echo "GCP_PROJECT argument must be set when using gcp"
   return 2
@@ -86,4 +86,4 @@ fi
 echo ${GOOGLE_AUTH} > ${HOME}/gcp-key.json
 gcloud auth activate-service-account --key-file ${HOME}/gcp-key.json
 gcloud --quiet config set project ${GCP_PROJECT}
-sh -c "gcloud run deploy $NAME --image=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG} $PARAMS"
+echo "gcloud run deploy $NAME --image=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG} $PARAMS"
