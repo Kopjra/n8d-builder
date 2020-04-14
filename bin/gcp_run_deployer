@@ -86,4 +86,4 @@ fi
 echo ${GOOGLE_AUTH} > ${HOME}/gcp-key.json
 gcloud auth activate-service-account --key-file ${HOME}/gcp-key.json
 gcloud --quiet config set project ${GCP_PROJECT}
-echo "gcloud run deploy $NAME --image=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG} $PARAMS"
+sh -c "gcloud run deploy $NAME --image=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG} $PARAMS"
