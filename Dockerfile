@@ -1,4 +1,4 @@
-FROM buildpack-deps:bionic
+FROM buildpack-deps:focal
 
 ENV DEBIAN_FRONTEND=noninteractive
 
