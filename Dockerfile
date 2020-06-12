@@ -2,10 +2,6 @@ FROM buildpack-deps:bionic
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Should force a new build (cacheless)
-# Not working except the first time
-RUN date
-
 # Installing kubectl
 RUN apt-get update && apt-get install -y apt-transport-https
 RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -

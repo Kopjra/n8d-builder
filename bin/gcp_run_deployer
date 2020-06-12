@@ -49,8 +49,8 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 echo "DOCKER_REGISTRY       = ${DOCKER_REGISTRY}"
 echo "DOCKER_REPOSITORY     = ${DOCKER_REPOSITORY}"
 echo "DOCKER_TAG            = ${DOCKER_TAG}"
-echo "GOOGLE_AUTH           = ${GOOGLE_AUTH}"
-echo "GCP_PROJECT           = ${GCP_PROJECT}"
+# echo "GOOGLE_AUTH           = ${GOOGLE_AUTH}"
+# echo "GCP_PROJECT           = ${GCP_PROJECT}"
 echo "PARAMS                = ${PARAMS}"
 echo "NAME                  = ${NAME}"
 
