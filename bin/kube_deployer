@@ -80,11 +80,26 @@ fi
 
 PRE_PWD=`pwd`
 cd $KUSTOMIZATION_PATH
+if [ -f "secfiles.yaml" ]; then
+    echo "secfiles.yaml exists. Sopsing..."
+    sops -d secfiles.yaml > secfiles_unencrypted.yaml
+fi
 sops -d secret.yaml > secret_unencrypted.yaml
 kustomize edit set image ${DOCKER_REPOSITORY}=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG}
 kustomize build . > kubernetes.yaml
 kubectl --server=$KUBERNETES_SERVER --insecure-skip-tls-verify --token $KUBERNETES_TOKEN apply -f kubernetes.yaml
 rm secret_unencrypted.yaml kubernetes.yaml
+
+DIR="$KUSTOMIZATION_PATH/../../common"
+echo "Looking for common kubernetes resource file in ${DIR}..."
+if [ -d "$DIR" ]; then
+  for entry in "$DIR"/*
+    do
+      echo Found "$entry"
+      kubectl --server=$KUBERNETES_SERVER --insecure-skip-tls-verify --token $KUBERNETES_TOKEN apply -f "$DIR"/"$entry"
+    done
+fi
+
 cd $PRE_PWD
 
 #echo "Number files in SEARCH PATH with EXTENSION:" $(ls -1 "${SEARCHPATH}"/*."${EXTENSION}" | wc -l)
