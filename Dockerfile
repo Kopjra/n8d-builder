@@ -34,5 +34,6 @@ COPY ./bin/docker_image_pusher /bin/docker_image_pusher
 COPY ./bin/kube_deployer /bin/kube_deployer
 COPY ./bin/docker_registry_login /bin/docker_registry_login
 COPY ./bin/gcp_run_deployer /bin/gcp_run_deployer
+COPY ./bin/kube_getsecret /bin/kube_getsecret
 
 CMD []
