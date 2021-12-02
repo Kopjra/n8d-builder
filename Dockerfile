@@ -18,7 +18,12 @@ RUN apt-get update
 RUN apt-get install -y docker-ce
 
 # Installing AWS CLI
-RUN apt-get install -y awscli
+#RUN apt-get install -y awscli
+RUN apt-get install -y python3.8-venv
+RUN curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+RUN unzip awscli-bundle.zip
+#run rm /usr/bin/aws
+RUN /usr/bin/python3.8 awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 
 # Installing gcloud
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && apt-get install google-cloud-sdk -y
