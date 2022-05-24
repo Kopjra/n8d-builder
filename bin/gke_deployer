@@ -1,0 +1,118 @@
+#!/bin/bash
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    --kustomization_path)
+    KUSTOMIZATION_PATH="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --gke_cluster_name)
+    GKE_CLUSTER_NAME="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --gke_cluster_region)
+    GKE_CLUSTER_REGION="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --docker_registry)
+    DOCKER_REGISTRY="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --docker_repository)
+    DOCKER_REPOSITORY="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --docker_tag)
+    DOCKER_TAG="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    *)    # unknown option
+    #POSITIONAL+=("$1") # save it in an array for later
+    #shift # past argument
+    echo "Unknown option(s) $1 $2"
+    return -3
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+echo "DOCKER_REGISTRY       = ${DOCKER_REGISTRY}"
+echo "DOCKER_REPOSITORY     = ${DOCKER_REPOSITORY}"
+echo "DOCKER_TAG            = ${DOCKER_TAG}"
+echo "KUSTOMIZATION_PATH    = ${KUSTOMIZATION_PATH}"
+echo "GKE_CLUSTER_NAME      = ${GKE_CLUSTER_NAME}"
+echo "GKE_CLUSTER_REGION    = ${GKE_CLUSTER_REGION}"
+
+if [[ -z "${KUSTOMIZATION_PATH}" ]]; then
+  echo "KUSTOMIZATION_PATH is a mandatory argument"
+  return -1
+fi
+if [[ -z "${GKE_CLUSTER_NAME}" ]]; then
+  echo "GKE_CLUSTER_NAME is a mandatory argument"
+  return -1
+fi
+if [[ -z "${GKE_CLUSTER_REGION}" ]]; then
+  echo "GKE_CLUSTER_REGION is a mandatory argument"
+  return -1
+fi
+if [[ -z "${DOCKER_REGISTRY}" ]]; then
+  echo "DOCKER_REGISTRY is a mandatory argument"
+  return -1
+fi
+if [[ -z "${DOCKER_REPOSITORY}" ]]; then
+  echo "DOCKER_REPOSITORY is a mandatory argument"
+  return -1
+fi
+if [[ -z "${DOCKER_TAG}" ]]; then
+  echo "DOCKER_TAG is a mandatory argument"
+  return -1
+fi
+
+# Generate kubernetes.yaml file
+PRE_PWD=`pwd`
+cd $KUSTOMIZATION_PATH
+if [ -f "secfiles.yaml" ]; then
+    echo "secfiles.yaml exists. Sopsing..."
+    sops -d secfiles.yaml > secfiles_unencrypted.yaml
+fi
+sops -d secret.yaml > secret_unencrypted.yaml
+kustomize edit set image ${DOCKER_REPOSITORY}=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG}
+kustomize build . > kubernetes.yaml
+
+# Log into gcloud
+echo ${GOOGLE_AUTH} > ${HOME}/gcp-key.json
+gcloud auth activate-service-account --key-file ${HOME}/gcp-key.json
+gcloud --quiet config set project ${GCP_PROJECT}
+gcloud container clusters get-credentials ${GKE_CLUSTER_NAME} --region=${GKE_CLUSTER_REGION}
+
+# Apply kubectl
+kubectl apply -f kubernetes.yaml
+rm secret_unencrypted.yaml kubernetes.yaml
+
+DIR="$KUSTOMIZATION_PATH/../../common"
+echo "Looking for common kubernetes resource file in ${DIR}..."
+if [ -d "$DIR" ]; then
+  for entry in "$DIR"/*
+    do
+      echo Found "$entry"
+      kubectl --server=$KUBERNETES_SERVER --insecure-skip-tls-verify --token $KUBERNETES_TOKEN apply -f "$DIR"/"$entry"
+    done
+fi
+
+cd $PRE_PWD
+
+#echo "Number files in SEARCH PATH with EXTENSION:" $(ls -1 "${SEARCHPATH}"/*."${EXTENSION}" | wc -l)
+#if [[ -n $1 ]]; then
+#    echo "Last line of file specified as non-opt/last argument:"
+#    tail -1 "$1"
+#fi
