@@ -36,6 +36,26 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    --k8s_configmap_name)
+    K8S_CONFIGMAP_NAME="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --k8s_configmap_namespace)
+    K8S_CONFIGMAP_NAMESPACE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --k8s_configmap_manual_dockerimage_sha256)
+    K8S_CONFIGMAP_MANUAL_DOCKERIMAGE_SHA256="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --k8s_configmap_auto_dockerimage_url)
+    K8S_CONFIGMAP_AUTO_DOCKERIMAGE_URL="$2"
+    shift # past argument
+    shift # past value
+    ;;
     *)    # unknown option
     #POSITIONAL+=("$1") # save it in an array for later
     #shift # past argument
@@ -52,6 +72,10 @@ echo "DOCKER_TAG            = ${DOCKER_TAG}"
 echo "KUSTOMIZATION_PATH    = ${KUSTOMIZATION_PATH}"
 echo "KUBERNETES_SERVER     = ${KUBERNETES_SERVER}"
 echo "KUBERNETES_TOKEN      = ${KUBERNETES_TOKEN}"
+echo "K8S_CONFIGMAP_NAME = ${K8S_CONFIGMAP_NAME}"
+echo "K8S_CONFIGMAP_NAMESPACE = ${K8S_CONFIGMAP_NAMESPACE}"
+echo "K8S_CONFIGMAP_MANUAL_DOCKERIMAGE_SHA256 = ${K8S_CONFIGMAP_MANUAL_DOCKERIMAGE_SHA256}"
+echo "K8S_CONFIGMAP_AUTO_DOCKERIMAGE_URL = ${K8S_CONFIGMAP_AUTO_DOCKERIMAGE_URL}"
 
 if [[ -z "${KUSTOMIZATION_PATH}" ]]; then
   echo "KUSTOMIZATION_PATH is a mandatory argument"
@@ -86,6 +110,28 @@ if [ -f "secfiles.yaml" ]; then
 fi
 sops -d secret.yaml > secret_unencrypted.yaml
 kustomize edit set image ${DOCKER_REPOSITORY}=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG}
+if [[ -z "${K8S_CONFIGMAP_MANUAL_DOCKERIMAGE_SHA256}" ]]; then
+  cat <<EOF >manual_dockerimage_sha256.json
+[
+  {"op": "add",
+   "path": "/data/DOCKERIMAGE_SHA256",
+   "value": "$K8S_CONFIGMAP_MANUAL_DOCKERIMAGE_SHA256"}
+]
+EOF
+  kustomize edit add patch --path manual_dockerimage_sha256.json --kind ConfigMap --name $K8S_CONFIGMAP_NAME --namespace $K8S_CONFIGMAP_NAMESPACE --version v1
+fi
+
+if [[ -z "${K8S_CONFIGMAP_AUTO_DOCKERIMAGE_URL}" ]]; then
+  cat <<EOF >auto_dockerimage_url.json
+[
+  {"op": "add",
+   "path": "/data/DOCKERIMAGE_URL",
+   "value": "${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG}"}
+]
+EOF
+  kustomize edit add patch --path auto_dockerimage_url.json --kind ConfigMap --name $K8S_CONFIGMAP_NAME --namespace $K8S_CONFIGMAP_NAMESPACE --version v1
+fi
+
 kustomize build . > kubernetes.yaml
 kubectl --server=$KUBERNETES_SERVER --insecure-skip-tls-verify --token $KUBERNETES_TOKEN apply -f kubernetes.yaml
 rm secret_unencrypted.yaml kubernetes.yaml
