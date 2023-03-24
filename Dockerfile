@@ -29,7 +29,7 @@ RUN /usr/bin/python3.8 awscli-bundle/install -i /usr/local/aws -b /usr/local/bin
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && apt-get install google-cloud-sdk -y
 
 # Installing kustomize
-RUN cd ~ && wget https://github.com/kubernetes-sigs/kustomize/releases/download/v2.0.3/kustomize_2.0.3_linux_amd64 && mv kustomize_2.0.3_linux_amd64 /usr/bin/kustomize && chmod aug+x /usr/bin/kustomize
+RUN cd ~ && wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.5.7/kustomize_v4.5.7_linux_amd64.tar.gz && tar -xvf kustomize_v4.5.7_linux_amd64.tar.gz && mv kustomize /usr/bin/kustomize && chmod aug+x /usr/bin/kustomize
 
 # Installing sops
 RUN cd ~ && wget https://github.com/mozilla/sops/releases/download/3.2.0/sops-3.2.0.linux && mv sops-3.2.0.linux /usr/bin/sops && chmod aug+x /usr/bin/sops

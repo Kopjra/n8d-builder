@@ -110,7 +110,7 @@ if [ -f "secfiles.yaml" ]; then
 fi
 sops -d secret.yaml > secret_unencrypted.yaml
 kustomize edit set image ${DOCKER_REPOSITORY}=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG}
-if [[ -z "${K8S_CONFIGMAP_MANUAL_DOCKERIMAGE_SHA256}" ]]; then
+if [[ -n "${K8S_CONFIGMAP_MANUAL_DOCKERIMAGE_SHA256}" ]]; then
   cat <<EOF >manual_dockerimage_sha256.json
 [
   {"op": "add",
@@ -121,7 +121,7 @@ EOF
   kustomize edit add patch --path manual_dockerimage_sha256.json --kind ConfigMap --name $K8S_CONFIGMAP_NAME --namespace $K8S_CONFIGMAP_NAMESPACE --version v1
 fi
 
-if [[ -z "${K8S_CONFIGMAP_AUTO_DOCKERIMAGE_URL}" ]]; then
+if [[ -n "${K8S_CONFIGMAP_AUTO_DOCKERIMAGE_URL}" ]]; then
   cat <<EOF >auto_dockerimage_url.json
 [
   {"op": "add",
