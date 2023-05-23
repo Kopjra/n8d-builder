@@ -40,6 +40,7 @@ COPY ./bin/kube_deployer /bin/kube_deployer
 COPY ./bin/docker_registry_login /bin/docker_registry_login
 COPY ./bin/gcp_run_deployer /bin/gcp_run_deployer
 COPY ./bin/kube_getsecret /bin/kube_getsecret
+COPY ./bin/kube_getconfig /bin/kube_getconfig
 COPY ./bin/gke_deployer /bin/gke_deployer
 
 CMD []
