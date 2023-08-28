@@ -11,6 +11,11 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    --gcp_project)
+    GCP_PROJECT="$2"
+    shift # past argument
+    shift # past value
+    ;;
     --gke_cluster_name)
     GKE_CLUSTER_NAME="$2"
     shift # past argument
@@ -49,6 +54,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 echo "DOCKER_REGISTRY       = ${DOCKER_REGISTRY}"
 echo "DOCKER_REPOSITORY     = ${DOCKER_REPOSITORY}"
 echo "DOCKER_TAG            = ${DOCKER_TAG}"
+echo "GCP_PROJECT           = ${GCP_PROJECT}"
 echo "KUSTOMIZATION_PATH    = ${KUSTOMIZATION_PATH}"
 echo "GKE_CLUSTER_NAME      = ${GKE_CLUSTER_NAME}"
 echo "GKE_CLUSTER_REGION    = ${GKE_CLUSTER_REGION}"
@@ -56,6 +62,10 @@ echo "GKE_CLUSTER_REGION    = ${GKE_CLUSTER_REGION}"
 if [[ -z "${KUSTOMIZATION_PATH}" ]]; then
   echo "KUSTOMIZATION_PATH is a mandatory argument"
   return -1
+fi
+if [[ -z "${GCP_PROJECT}" ]]; then
+  echo "GCP_PROJECT is a mandatory argument"
+  return 2
 fi
 if [[ -z "${GKE_CLUSTER_NAME}" ]]; then
   echo "GKE_CLUSTER_NAME is a mandatory argument"
@@ -76,6 +86,10 @@ fi
 if [[ -z "${DOCKER_TAG}" ]]; then
   echo "DOCKER_TAG is a mandatory argument"
   return -1
+fi
+if [[ -z "${GOOGLE_AUTH}" ]]; then
+  echo "GOOGLE_AUTH environmental variable must be set when using gcp"
+  return -2
 fi
 
 # Generate kubernetes.yaml file
