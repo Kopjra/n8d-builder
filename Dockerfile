@@ -1,46 +1,30 @@
-FROM buildpack-deps:focal
+FROM buildpack-deps:noble
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Installing kubectl
-RUN apt-get update && apt-get install -y apt-transport-https
-RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-RUN touch /etc/apt/sources.list.d/kubernetes.list
-RUN echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
-RUN apt-get update
-RUN apt-get install -y kubectl
+RUN apt update && apt install -y apt-transport-https ca-certificates curl gnupg && curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.34/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg && chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg && echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.34/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list && chmod 644 /etc/apt/sources.list.d/kubernetes.list && apt update && apt install -y kubectl
 
-# Installing Docker CLI (Docker inside Docker, yay!)
-RUN apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-
-RUN install -m 0755 -d /etc/apt/keyrings
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-RUN chmod a+r /etc/apt/keyrings/docker.gpg
-RUN echo \
-      "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-      "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-      tee /etc/apt/sources.list.d/docker.list > /dev/null
-# RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-# RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
-RUN apt-get update
-RUN apt-get install -y docker-ce
+# Add Docker's official GPG key:
+RUN apt install -y ca-certificates curl && install -m 0755 -d /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && chmod a+r /etc/apt/keyrings/docker.asc
+RUN tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+RUN apt update && apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # Installing AWS CLI
 #RUN apt-get install -y awscli
-RUN apt-get install -y python3.8-venv
-RUN curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-RUN unzip awscli-bundle.zip
-#run rm /usr/bin/aws
-RUN /usr/bin/python3.8 awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+RUN apt-get install -y python3.12-venv && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && ./aws/install
 
 # Installing gcloud
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && apt-get install google-cloud-sdk -y
-
-# Installing kustomize
-RUN cd ~ && wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.5.7/kustomize_v4.5.7_linux_amd64.tar.gz && tar -xvf kustomize_v4.5.7_linux_amd64.tar.gz && mv kustomize /usr/bin/kustomize && chmod aug+x /usr/bin/kustomize
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && apt-get update -y && apt-get install google-cloud-cli -y && apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
 
 # Installing sops
-RUN cd ~ && wget https://github.com/mozilla/sops/releases/download/3.2.0/sops-3.2.0.linux && mv sops-3.2.0.linux /usr/bin/sops && chmod aug+x /usr/bin/sops
+RUN cd ~ && curl -LO https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64 && mv sops-v3.11.0.linux.amd64 /usr/local/bin/sops && chmod +x /usr/local/bin/sops
 
 # Installing binaries
 COPY ./bin/docker_image_pusher /bin/docker_image_pusher

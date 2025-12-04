@@ -92,7 +92,12 @@ if [[ -z "${GOOGLE_AUTH}" ]]; then
   return -2
 fi
 
-# Generate kubernetes.yaml file
+# Log into gcloud
+echo ${GOOGLE_AUTH} > ${HOME}/gcp-key.json
+gcloud auth activate-service-account --key-file ${HOME}/gcp-key.json
+gcloud --quiet config set project ${GCP_PROJECT}
+gcloud container clusters get-credentials ${GKE_CLUSTER_NAME} --region=${GKE_CLUSTER_REGION}
+
 PRE_PWD=`pwd`
 cd $KUSTOMIZATION_PATH
 if [ -f "secfiles.yaml" ]; then
@@ -101,15 +106,29 @@ if [ -f "secfiles.yaml" ]; then
 fi
 sops -d secret.yaml > secret_unencrypted.yaml
 kustomize edit set image ${DOCKER_REPOSITORY}=${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG}
+if [[ -n "${K8S_CONFIGMAP_MANUAL_DOCKERIMAGE_SHA256}" ]]; then
+  cat <<EOF >manual_dockerimage_sha256.json
+[
+  {"op": "add",
+   "path": "/data/DOCKERIMAGE_SHA256",
+   "value": "$K8S_CONFIGMAP_MANUAL_DOCKERIMAGE_SHA256"}
+]
+EOF
+  kustomize edit add patch --path manual_dockerimage_sha256.json --kind ConfigMap --name $K8S_CONFIGMAP_NAME --namespace $K8S_CONFIGMAP_NAMESPACE --version v1
+fi
+
+if [[ -n "${K8S_CONFIGMAP_AUTO_DOCKERIMAGE_URL}" ]]; then
+  cat <<EOF >auto_dockerimage_url.json
+[
+  {"op": "add",
+   "path": "/data/DOCKERIMAGE_URL",
+   "value": "${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:${DOCKER_TAG}"}
+]
+EOF
+  kustomize edit add patch --path auto_dockerimage_url.json --kind ConfigMap --name $K8S_CONFIGMAP_NAME --namespace $K8S_CONFIGMAP_NAMESPACE --version v1
+fi
+
 kustomize build . > kubernetes.yaml
-
-# Log into gcloud
-echo ${GOOGLE_AUTH} > ${HOME}/gcp-key.json
-gcloud auth activate-service-account --key-file ${HOME}/gcp-key.json
-gcloud --quiet config set project ${GCP_PROJECT}
-gcloud container clusters get-credentials ${GKE_CLUSTER_NAME} --region=${GKE_CLUSTER_REGION}
-
-# Apply kubectl
 kubectl apply -f kubernetes.yaml
 rm secret_unencrypted.yaml kubernetes.yaml
 
