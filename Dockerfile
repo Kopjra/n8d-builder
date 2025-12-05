@@ -23,6 +23,9 @@ RUN apt-get install -y python3.12-venv && curl "https://awscli.amazonaws.com/aws
 # Installing gcloud
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && apt-get update -y && apt-get install google-cloud-cli -y && apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
 
+# Installing kustomize (standalone binary)
+RUN cd ~ && curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash && mv kustomize /usr/local/bin/kustomize && chmod +x /usr/local/bin/kustomize
+
 # Installing sops
 RUN cd ~ && curl -LO https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64 && mv sops-v3.11.0.linux.amd64 /usr/local/bin/sops && chmod +x /usr/local/bin/sops
 
