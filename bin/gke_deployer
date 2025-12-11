@@ -41,6 +41,26 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    --k8s_configmap_name)
+    K8S_CONFIGMAP_NAME="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --k8s_configmap_namespace)
+    K8S_CONFIGMAP_NAMESPACE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --k8s_configmap_manual_dockerimage_sha256)
+    K8S_CONFIGMAP_MANUAL_DOCKERIMAGE_SHA256="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --k8s_configmap_auto_dockerimage_url)
+    K8S_CONFIGMAP_AUTO_DOCKERIMAGE_URL="$2"
+    shift # past argument
+    shift # past value
+    ;;
     *)    # unknown option
     #POSITIONAL+=("$1") # save it in an array for later
     #shift # past argument
